@@ -77,6 +77,7 @@ export default function OrganizationPage({
     isLoading,
   } = useTransactions(orgId);
 
+
   useEffect(() => {
     if (organization) {
       navigation.setOptions({
@@ -124,7 +125,7 @@ export default function OrganizationPage({
               backgroundColor="transparent"
               size={24}
               color={palette.primary}
-              iconStyle={{ marginRight: 0 }}
+              iconStyle={{ marginRight: 0 }} 
             />
           </MenuView>
         ),

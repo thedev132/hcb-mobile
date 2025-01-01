@@ -218,7 +218,7 @@ export default function App({ navigation }: Props) {
   const [sortedOrgs, togglePinnedOrg] = usePinnedOrgs(organizations);
   const { data: invitations, mutate: reloadInvitations } =
     useSWR<Invitation[]>("user/invitations");
-
+  
   const { fetcher, mutate } = useSWRConfig();
   const tabBarHeight = useBottomTabBarHeight();
   const scheme = useColorScheme();

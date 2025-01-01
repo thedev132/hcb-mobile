@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import useSWR from "swr";
 
+import OrderCardModal from "../components/cards/AddCard";
 import PaymentCard from "../components/PaymentCard";
 import { CardsStackParamList } from "../lib/NavigatorParamList";
 import Card from "../lib/types/Card";
@@ -28,6 +29,8 @@ export default function CardsPage({ navigation }: Props) {
   const { data: grantCards, mutate: reloadGrantCards } = useSWR<GrantCard[]>(
     "user/card_grants"
   );
+  const {data: user} = useSWR("user");
+
   const tabBarHeight = useBottomTabBarHeight();
   const scheme = useColorScheme();
 
@@ -38,10 +41,16 @@ export default function CardsPage({ navigation }: Props) {
 
   const [frozenCardsShown, setFrozenCardsShown] = useState(true);
   const [allCards, setAllCards] = useState<((Card & Required<Pick<Card, "last4">>) | GrantCard)[]>();
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
+        <View style={{ flexDirection: "row" }}>
         <MenuView
           actions={[
             {
@@ -66,6 +75,16 @@ export default function CardsPage({ navigation }: Props) {
             iconStyle={{ marginRight: 0 }}
           />
         </MenuView>
+          <Ionicons.Button
+            name="add-circle-outline"
+            backgroundColor="transparent"
+            size={24}
+            color={palette.primary}
+            iconStyle={{ marginRight: 0 }}
+            onPress={() => toggleModal()}
+            underlayColor={"transparent"}
+          />
+        </View>
       ),
     });
   }, [navigation, frozenCardsShown, scheme]);
@@ -116,34 +135,37 @@ export default function CardsPage({ navigation }: Props) {
 
   if (allCards) {
     return (
-      <FlatList
-        data={
-          frozenCardsShown ? allCards : allCards.filter((c) => c.status == "active")
-        }
-        contentContainerStyle={{
-          paddingBottom: tabBarHeight + 20,
-          paddingTop: 20,
-          alignItems: "center",
-        }}
-        scrollIndicatorInsets={{ bottom: tabBarHeight }}
-        overScrollMode="never"
-        // onRefresh={() => refresh()}
-        // refreshing={isValidating}
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() =>
-              navigation.navigate("Card", {
-                card: item,
-              })
-            }
-          >
-            <PaymentCard
-              card={item}
-              style={{ marginHorizontal: 20, marginVertical: 8 }}
-            />
-          </Pressable>
-        )}
-      />
+      <View>
+        <FlatList
+          data={
+            frozenCardsShown ? allCards : allCards.filter((c) => c.status == "active")
+          }
+          contentContainerStyle={{
+            paddingBottom: tabBarHeight + 20,
+            paddingTop: 20,
+            alignItems: "center",
+          }}
+          scrollIndicatorInsets={{ bottom: tabBarHeight }}
+          overScrollMode="never"
+          // onRefresh={() => refresh()}
+          // refreshing={isValidating}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() =>
+                navigation.navigate("Card", {
+                  card: item,
+                })
+              }
+            >
+              <PaymentCard
+                card={item}
+                style={{ marginHorizontal: 20, marginVertical: 8 }}
+              />
+            </Pressable>
+          )}
+        />
+        <OrderCardModal isVisible={isModalVisible} onClose={toggleModal} user={user} />
+      </View>
     );
   } else {
     return (
