@@ -4,6 +4,7 @@ import { ToWords } from 'to-words';
 
 import { OrganizationExpanded } from "../../lib/types/Organization";
 import palette from "../../palette";
+import Constants from "expo-constants";
 
 const screenWidth = Dimensions.get("window").width;
 const checkRatio = 3.2 / 6; 
@@ -61,7 +62,7 @@ export default function CheckComponent({
         <Text style={styles.checkNumber}>{checkNumber || "----"}</Text>
         <View style={{flexDirection: "row", alignItems: "center"}}>
           <Text style={styles.label}>Date:</Text>
-            <View style={{borderBottomWidth: 2, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}}>
+            <View style={{borderBottomWidth: Constants.platform?.ios ? 2 : 1, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}}>
              <Text style={[styles.dateText, styles.handwriting]}>{date}</Text>
             </View>
         </View>
@@ -70,20 +71,22 @@ export default function CheckComponent({
       {/* Pay to the Order Of */}
       <View style={[styles.row, { gap: 10 }]}>
         <Text style={[styles.label, {fontSize: 10, marginRight: 0}]}>Pay to the{"\n"}order of</Text>
-        <View style={[styles.flexGrow, {borderBottomWidth: 2, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}]}>
-          <Text style={styles.handwriting}>
+        <View style={[styles.flexGrow, {borderBottomWidth: Constants.platform?.ios ? 2 : 1, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}]}>
+          <Text numberOfLines={1} style={styles.handwriting}>
             {recipientName}
           </Text>
         </View>
-        <Text style={styles.amountInput}>$</Text>
-        <Text style={styles.amount}>
-          {renderMoneyAmount(amount).replace("$", "")}
-        </Text>
+        <View style={{flexShrink: 0, flexGrow:0, flexDirection: "row", alignItems: "center", gap: 8}}>
+          <Text style={styles.amountInput}>$</Text>
+          <Text numberOfLines={1} style={styles.amount}>
+            {renderMoneyAmount(amount).replace("$", "")}
+          </Text>
+        </View>
       </View>
 
       {/* Amount in Words */}
       <View style={[styles.row, {gap: 12}]}>
-        <View style={[styles.flexGrow, {borderBottomWidth: 2, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}]}>
+        <View style={[styles.flexGrow, {borderBottomWidth: Constants.platform?.ios ? 2 : 1, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}]}>
           <Text numberOfLines={1} style={styles.handwriting}>{amountInWords}</Text>
         </View>
         <Text style={styles.label}>Dollars</Text>
@@ -92,7 +95,7 @@ export default function CheckComponent({
       {/* Memo */}
       <View style={[styles.row, styles.memoContainer, { marginBottom: 0 }]}>
         <Text style={styles.label}>Memo</Text>
-        <View style={[styles.flexGrow, {borderBottomWidth: 2, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}]}>
+        <View style={[styles.flexGrow, {borderBottomWidth: Constants.platform?.ios ? 2 : 1, borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400]}]}>
           <Text style={styles.handwriting}>
             {memo}
           </Text>
@@ -139,7 +142,7 @@ const getStyles = (scheme: 'light' | 'dark') => StyleSheet.create({
     marginBottom: 12,
   },
   checkNumber: {
-    fontFamily: "check-font",
+    fontFamily: "Consolas-Bold",
     fontSize: 14,
     textAlign: "right",
     marginBottom: 8,
@@ -166,7 +169,7 @@ const getStyles = (scheme: 'light' | 'dark') => StyleSheet.create({
   handwriting: {
     fontFamily: "Damion",
     fontSize: 16,
-    borderBottomWidth: 2,
+    borderBottomWidth: Constants.platform?.ios ? 2 : 1,
     borderBottomColor: scheme === 'dark' ? palette.slate[500] : palette.slate[400],
     paddingRight: 8,
     color: scheme === 'dark' ? "#fff" : "#000",
@@ -178,6 +181,7 @@ const getStyles = (scheme: 'light' | 'dark') => StyleSheet.create({
     maxWidth: 120,
     color: scheme === 'dark' ? "#fff" : "#000", 
     textAlign: "right",
+    flexShrink: 0,
   },
   amount: {
     fontFamily: "Damion",
@@ -194,8 +198,8 @@ const getStyles = (scheme: 'light' | 'dark') => StyleSheet.create({
     alignItems: "center",
   },
   flexGrow: {
+    flex: 1,
     flexGrow: 1,
-    maxWidth: "75%",
   },
   signature: {
     height: 40,

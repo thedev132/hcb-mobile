@@ -3,10 +3,12 @@ import Constants from "expo-constants";
 import { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Button as NativeButton, View, ScrollView, Platform } from "react-native";
 
+import Button from "../../components/Button";
 import DisbursementScreen from "../../components/organizations/transfer/Disbursement";
 import { StackParamList } from "../../lib/NavigatorParamList";
 import { OrganizationExpanded } from "../../lib/types/Organization";
 import { palette } from "../../theme";
+import CheckScreen from "../../components/organizations/transfer/CheckCreate";
 
 type Props = NativeStackScreenProps<StackParamList, "Transfer">;
 
@@ -36,7 +38,7 @@ export default function TransferPage({ navigation, route }: Props) {
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20 }}>
         {/* Transfer Type Buttons */}
-        {/* <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
           <Button
             style={{
               flex: 1,
@@ -47,7 +49,7 @@ export default function TransferPage({ navigation, route }: Props) {
           >
             HCB
           </Button>
-          <Button
+          {/* <Button
             style={{
               flex: 1,
               backgroundColor: transferType === "ach" ? palette.primary : palette.slate,
@@ -56,7 +58,7 @@ export default function TransferPage({ navigation, route }: Props) {
             onPress={() => setTransferType("ach")}
           >
             ACH
-          </Button>
+          </Button> */}
           <Button
             style={{
               flex: 1,
@@ -67,10 +69,11 @@ export default function TransferPage({ navigation, route }: Props) {
           >
             Check
           </Button>
-        </View> */}
+        </View>
 
         {/* Display transfer screen based on transfer type */}
         {transferType === "hcb" && <DisbursementScreen organization={organization} />}
+        {transferType === "check" && <CheckScreen organization={organization} />}
       </ScrollView>
     </KeyboardAvoidingView>
   );
