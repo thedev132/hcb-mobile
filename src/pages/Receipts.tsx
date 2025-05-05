@@ -1,3 +1,4 @@
+import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useTheme } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -6,13 +7,15 @@ import * as ImagePicker from "expo-image-picker";
 import { useContext, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
+  RefreshControl,
+  ScrollView,
   Text,
   TouchableHighlight,
   View,
 } from "react-native";
-import useSWR from "swr";
+import { ALERT_TYPE, Toast } from "react-native-alert-notification";
+import useSWR, { mutate } from "swr";
 
 import AuthContext from "../auth";
 import { ReceiptsStackParamList } from "../lib/NavigatorParamList";
@@ -29,63 +32,109 @@ function Transaction({
   transaction: TransactionCardCharge & { organization: Organization };
   onComplete: () => void;
 }) {
-  const [status, requestPermission] = ImagePicker.useCameraPermissions();
   const { token } = useContext(AuthContext);
 
   const { colors: themeColors } = useTheme();
 
   const [loading, setLoading] = useState(false);
 
+  const { showActionSheetWithOptions } = useActionSheet();
+  const uploadReceipt = async (
+    selectedImage: {
+      uri: string;
+      fileName?: string;
+    } | null,
+  ) => {
+    const body = new FormData();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+
+    body.append("file", {
+      uri: selectedImage?.uri,
+      name: selectedImage?.fileName || "skibidi.jpg",
+      type: "image/jpeg",
+    });
+
+    try {
+      await fetch(
+        process.env.EXPO_PUBLIC_API_BASE +
+          `/organizations/${transaction.organization.id}/transactions/${transaction.id}/receipts`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body,
+        },
+      );
+      mutate(
+        `organizations/${transaction.organization.id}/transactions/${transaction.id}/receipts`,
+      );
+      setLoading(false);
+      onComplete();
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: "Reciept Uploaded!",
+        textBody: "Your reciept has been uploaded successfully.",
+      });
+    } catch (e) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: "Error",
+        textBody: "An error occurred while uploading the reciept.",
+      });
+      setLoading(false);
+    }
+  };
+
+  const handleActionSheet = () => {
+    const options = ["Camera", "Photo Library", "Cancel"];
+    const cancelButtonIndex = 2;
+
+    showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+      },
+      async (buttonIndex) => {
+        if (buttonIndex === 0) {
+          // Take a photo
+          ImagePicker.requestCameraPermissionsAsync();
+          const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: "images",
+            allowsEditing: true,
+            quality: 1,
+          });
+          if (!result.canceled) {
+            setLoading(true);
+            await uploadReceipt({
+              uri: result.assets[0].uri,
+              fileName: result.assets[0].fileName || undefined,
+            });
+          }
+        } else if (buttonIndex === 1) {
+          // Pick from photo library
+          ImagePicker.requestMediaLibraryPermissionsAsync();
+          const result = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            quality: 1,
+          });
+          if (!result.canceled) {
+            setLoading(true);
+            await uploadReceipt({
+              uri: result.assets[0].uri,
+              fileName: result.assets[0].fileName || undefined,
+            });
+          }
+        }
+      },
+    );
+  };
+
   return (
     <TouchableHighlight
       underlayColor={themeColors.background}
-      onPress={async () => {
-        if (!status?.granted) {
-          const { granted } = await requestPermission();
-          if (!granted) return;
-        }
-
-        const result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        });
-
-        if (result.canceled || result.assets.length == 0) return;
-        const asset = result.assets[0];
-
-        setLoading(true);
-
-        const body = new FormData();
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        body.append("file", {
-          uri: asset.uri,
-          name: asset.fileName || "yeet.jpg",
-          type: "image/jpeg",
-        });
-
-        try {
-          await fetch(
-            process.env.EXPO_PUBLIC_API_BASE +
-              `/organizations/${transaction.organization.id}/transactions/${transaction.id}/receipts`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-              body,
-            },
-          );
-        } catch (e) {
-          Alert.alert("Something went wrong.");
-        } finally {
-          setLoading(false);
-        }
-
-        onComplete();
-
-        Alert.alert("Receipt uploaded!");
-      }}
+      onPress={handleActionSheet}
     >
       <View
         style={{
@@ -149,6 +198,12 @@ export default function ReceiptsPage({ navigation: _navigation }: Props) {
     mutate();
   });
 
+  const [refreshing] = useState(false);
+
+  const onRefresh = async () => {
+    mutate();
+  };
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -159,7 +214,16 @@ export default function ReceiptsPage({ navigation: _navigation }: Props) {
 
   if (data?.data?.length == 0) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={{ marginBottom: 10 }}>
           <Ionicons name="receipt-outline" color={palette.muted} size={60} />
           <Ionicons
@@ -174,7 +238,7 @@ export default function ReceiptsPage({ navigation: _navigation }: Props) {
           />
         </View>
         <Text style={{ color: palette.muted }}>No receipts to upload.</Text>
-      </View>
+      </ScrollView>
     );
   }
 
@@ -185,6 +249,8 @@ export default function ReceiptsPage({ navigation: _navigation }: Props) {
         <Transaction transaction={item} onComplete={() => mutate()} />
       )}
       contentContainerStyle={{ padding: 20 }}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
     />
   );
 }

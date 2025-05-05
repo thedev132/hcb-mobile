@@ -8,6 +8,7 @@ import { StyleSheet, useColorScheme } from "react-native";
 import useSWR, { useSWRConfig } from "swr";
 
 // import OrganizationTitle from "./components/organizations/OrganizationTitle";
+import OrganizationLoader from "./components/organizations/OrganizationLoader";
 import {
   StackParamList,
   CardsStackParamList,
@@ -23,7 +24,10 @@ import InvitationPage from "./pages/Invitation";
 import OrderCardPage from "./pages/OrderCard";
 import OrganizationPage from "./pages/organization";
 import AccountNumberPage from "./pages/organization/AccountNumber";
+import OrganizationDonationPage from "./pages/organization/Donation";
+import ProcessDonationPage from "./pages/organization/ProcessDonation";
 import OrganizationSettingsPage from "./pages/organization/Settings";
+import TransferPage from "./pages/organization/transfer";
 import ReceiptsPage from "./pages/Receipts";
 import RenameTransactionPage from "./pages/RenameTransaction";
 import SettingsPage from "./pages/Settings";
@@ -140,6 +144,13 @@ export default function Navigator() {
               component={OrganizationPage}
             />
             <Stack.Screen
+              name="OrganizationLoader"
+              component={OrganizationLoader}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="AccountNumber"
               component={AccountNumberPage}
               options={{ presentation: "modal", title: "Account Details" }}
@@ -153,6 +164,19 @@ export default function Navigator() {
               }}
             />
             <Stack.Screen
+              name="OrganizationDonation"
+              component={OrganizationDonationPage}
+              options={{
+                headerBackTitle: "Back",
+                title: "Collect Donations",
+              }}
+            />
+            <Stack.Screen
+              name="ProcessDonation"
+              component={ProcessDonationPage}
+              options={{ presentation: "modal", title: "Process Donation" }}
+            />
+            <Stack.Screen
               options={{ headerBackTitle: "Back" }}
               name="Transaction"
               component={TransactionPage}
@@ -163,6 +187,14 @@ export default function Navigator() {
               options={{
                 presentation: "modal",
                 title: "Edit Transaction Description",
+              }}
+            />
+            <Stack.Screen
+              name="Transfer"
+              component={TransferPage}
+              options={{
+                presentation: "modal",
+                title: "Send Transfer",
               }}
             />
           </Stack.Navigator>
@@ -179,7 +211,7 @@ export default function Navigator() {
             <CardsStack.Screen
               name="Card"
               component={CardPage}
-              options={({ route }) => ({
+              options={() => ({
                 title: "Card",
               })}
             />

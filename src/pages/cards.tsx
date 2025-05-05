@@ -4,7 +4,7 @@ import { MenuView } from "@react-native-menu/menu";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -29,7 +29,7 @@ export default function CardsPage({ navigation }: Props) {
     "user/card_grants"
   );
   const { data: user } = useSWR("user");
-
+  
   const tabBarHeight = useBottomTabBarHeight();
   const scheme = useColorScheme();
 
@@ -39,27 +39,32 @@ export default function CardsPage({ navigation }: Props) {
   });
 
   const [frozenCardsShown, setFrozenCardsShown] = useState(true);
-  const [allCards, setAllCards] = useState<((Card & Required<Pick<Card, "last4">>) | GrantCard)[]>();
+  const [allCards, setAllCards] =
+    useState<((Card & Required<Pick<Card, "last4">>) | GrantCard)[]>();
+  const [refreshing] = useState(false);
 
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: "row" }}>
           <MenuView
-            actions={[
-              {
-                id: "showFrozenCards",
-                title: "Show inactive cards",
-                state: frozenCardsShown ? "on" : "off",
-              },
-            ]}
-            onPressAction={({ nativeEvent: { event } }) => {
-              if (event == "showFrozenCards") {
-                setFrozenCardsShown(!frozenCardsShown);
-                AsyncStorage.setItem("frozenCardsShown", (!frozenCardsShown).toString());
-              }
-            }}
-            themeVariant={scheme || undefined}
+          actions={[
+            {
+              id: "showFrozenCards",
+              title: "Show inactive cards",
+              state: frozenCardsShown ? "on" : "off",
+            },
+          ]}
+          onPressAction={({ nativeEvent: { event } }) => {
+            if (event == "showFrozenCards") {
+              setFrozenCardsShown(!frozenCardsShown);
+              AsyncStorage.setItem(
+                "frozenCardsShown",
+                (!frozenCardsShown).toString(),
+              );
+            }
+          }}
+          themeVariant={scheme || undefined}
           >
             <Ionicons.Button
               name="ellipsis-horizontal-circle"
@@ -83,79 +88,98 @@ export default function CardsPage({ navigation }: Props) {
     });
   }, [navigation, frozenCardsShown, scheme, user]);
 
+  const combineCards = useCallback(() => {
+    // Transform grantCards
+    const transformedGrantCards = grantCards?.map((grantCard) => ({
+      ...grantCard,
+      grant_id: grantCard.id, // Move original id to grant_id
+      id: grantCard.card_id, // Replace id with card_id
+    }));
+
+    // Filter out cards that are also grantCards
+    const filteredCards = cards?.filter(
+      (card) =>
+        !transformedGrantCards?.some((grantCard) => grantCard.id === card.id),
+    );
+
+    // Combine filtered cards and transformed grantCards
+    const combinedCards = [
+      ...(filteredCards || []),
+      ...(transformedGrantCards || []),
+    ];
+
+    // Sort cards by status
+    combinedCards.sort((a, b) => {
+      if (a.status == "active" && b.status != "active") {
+        return -1;
+      } else if (a.status != "active" && b.status == "active") {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    // Update state
+    // @ts-expect-error both types have the same properties that are used
+    setAllCards(combinedCards);
+  }, [cards, grantCards]);
+
   useEffect(() => {
     const fetchFrozenCardsShown = async () => {
       const isFrozenCardsShown = await AsyncStorage.getItem("frozenCardsShown");
       if (isFrozenCardsShown) {
         setFrozenCardsShown(isFrozenCardsShown === "true");
-        await AsyncStorage.setItem("frozenCardsShown", (isFrozenCardsShown === "true").toString());
+        await AsyncStorage.setItem(
+          "frozenCardsShown",
+          (isFrozenCardsShown === "true").toString(),
+        );
       }
     };
 
     fetchFrozenCardsShown();
 
     if (cards && grantCards) {
-      // Transform grantCards
-      const transformedGrantCards = grantCards.map((grantCard) => ({
-        ...grantCard,
-        grant_id: grantCard.id, // Move original id to grant_id
-        id: grantCard.card_id, // Replace id with card_id
-      }));
-
-      // Filter out cards that are also grantCards
-      const filteredCards = cards.filter(
-        (card) => !transformedGrantCards.some((grantCard) => grantCard.id === card.id)
-      );
-
-      // Combine filtered cards and transformed grantCards
-      const combinedCards = [...filteredCards, ...transformedGrantCards];
-
-      // Sort cards by status
-      combinedCards.sort((a, b) => {
-        if (a.status == "active" && b.status != "active") {
-          return -1;
-        } else if (a.status != "active" && b.status == "active") {
-          return 1;
-        } else {
-          return 0;
-        }
-      });
-
-      // Update state
-      setAllCards(combinedCards);
+      combineCards();
     }
-  }, [cards, grantCards]);
+  }, [cards, grantCards, combineCards]);
+
+  const onRefresh = async () => {
+    await reloadCards();
+    await reloadGrantCards();
+  };
 
   if (allCards) {
     return (
-      <View>
-        <FlatList
-          data={
-            frozenCardsShown ? allCards : allCards.filter((c) => c.status == "active")
-          }
-          contentContainerStyle={{
-            paddingBottom: tabBarHeight + 20,
-            paddingTop: 20,
-            alignItems: "center",
-          }}
-          scrollIndicatorInsets={{ bottom: tabBarHeight }}
-          overScrollMode="never"
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() =>
-                navigation.navigate("Card", {
-                  card: item,
-                })
-              }
-            >
-              <PaymentCard
-                card={item}
-                style={{ marginHorizontal: 20, marginVertical: 8 }}
-              />
-            </Pressable>
-          )}
-        />
-      </View>
+      <FlatList
+        data={
+          frozenCardsShown
+            ? allCards
+            : allCards.filter((c) => c.status == "active")
+        }
+        contentContainerStyle={{
+          paddingBottom: tabBarHeight + 20,
+          paddingTop: 20,
+          alignItems: "center",
+        }}
+        scrollIndicatorInsets={{ bottom: tabBarHeight }}
+        overScrollMode="never"
+        onRefresh={() => onRefresh()}
+        refreshing={refreshing}
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() =>
+              navigation.navigate("Card", {
+                card: item,
+              })
+            }
+          >
+            <PaymentCard
+              card={item}
+              style={{ marginHorizontal: 20, marginVertical: 8 }}
+            />
+          </Pressable>
+        )}
+      />
     );
   } else {
     return (

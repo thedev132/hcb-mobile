@@ -1,5 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { faPaypal } from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { useTheme } from "@react-navigation/native";
+import Icon from "@thedev132/hackclub-icons-rn";
 import { LinearGradient } from "expo-linear-gradient";
 import { memo } from "react";
 import { View, Text, ViewProps, StyleSheet } from "react-native";
@@ -15,36 +18,49 @@ import { renderMoney } from "../util";
 
 import UserAvatar from "./UserAvatar";
 
-function transactionIcon({
-  code,
-  ...transaction
-}: TransactionWithoutId): React.ComponentProps<typeof Ionicons>["name"] {
+function transactionIcon({ code, ...transaction }: TransactionWithoutId) {
   switch (code) {
     case TransactionType.Donation:
     case TransactionType.PartnerDonation:
-      return "heart-outline";
+      return "support";
     case TransactionType.Check:
     case TransactionType.IncreaseCheck:
-      return "mail-outline";
+      return "email";
     case TransactionType.CheckDeposit:
-      return "receipt-outline";
+      return "briefcase";
     case TransactionType.Disbursement:
+      if (transaction.memo.startsWith("Grant to")) {
+        return "purse-fill";
+      } else if (transaction.memo == "💰 Hackathon grant from Hack Club") {
+        return "purse";
+      }
       if (transaction.amount_cents > 0) {
-        return "add-circle-outline";
+        return "door-enter";
       } else {
-        return "remove-circle-outline";
+        return "door-leave";
       }
     case TransactionType.StripeCard:
     case TransactionType.StripeForceCapture:
-      return "card-outline";
+      if (transaction.amount_cents > 0) {
+        return "view-reload";
+      }
+      return "card";
     case TransactionType.BankFee:
-      return "remove-circle-outline";
+      return "minus";
     case TransactionType.FeeRevenue:
-      return "add-circle-outline";
+      return "plus";
     case TransactionType.Invoice:
-      return "receipt-outline";
+      return "briefcase";
+    case TransactionType.ExpensePayout:
+      return "attachment";
+    case TransactionType.Wire:
+      return "web";
+    case TransactionType.Paypal:
+      return "paypal";
+    case TransactionType.AchTransfer:
+      return "payment-transfer";
     default:
-      return "cash-outline";
+      return "payment-docs";
   }
 }
 
@@ -67,22 +83,30 @@ function TransactionIcon({
       />
     );
   } else {
-    return (
-      <Ionicons
-        name={transactionIcon(transaction)}
-        color={
-          transaction.appearance == "hackathon_grant"
-            ? palette.black
-            : palette.muted
-        }
-        size={20}
-      />
-    );
+    if (transactionIcon(transaction) == "paypal") {
+      return (
+        <FontAwesomeIcon color={palette.muted} icon={faPaypal} size={20} />
+      );
+    } else {
+      return (
+        <Icon
+          // @ts-expect-error it is checked above
+          glyph={transactionIcon(transaction)}
+          color={
+            transaction.appearance == "hackathon_grant"
+              ? palette.black
+              : palette.muted
+          }
+          size={20}
+        />
+      );
+    }
   }
 }
 
 function Transaction({
   transaction,
+  // orgId,
   top = false,
   bottom = false,
   hideAvatar,
@@ -92,6 +116,7 @@ function Transaction({
   style,
 }: ViewProps & {
   transaction: TransactionWithoutId;
+  orgId: string;
   top?: boolean;
   bottom?: boolean;
   hideAvatar?: boolean;

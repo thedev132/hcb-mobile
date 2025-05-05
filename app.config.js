@@ -1,3 +1,4 @@
+import appIcons from "./src/lib/AppIconList";
 const IS_DEV = process.env.APP_VARIANT === "development";
 
 export default {
@@ -17,9 +18,9 @@ export default {
     },
     assetBundlePatterns: ["**/*"],
     ios: {
-      supportsTablet: true,
+      supportsTablet: false,
       bundleIdentifier: IS_DEV ? "com.hackclub.hcb.dev" : "com.hackclub.hcb",
-      buildNumber: "1.0.0.15",
+      buildNumber: "1.0.0.17",
       config: {
         usesNonExemptEncryption: false,
       },
@@ -27,6 +28,9 @@ export default {
         "applinks:hcb.hackclub.com",
         "applinks:bank.hackclub.com",
       ],
+      // entitlements: {
+      //   "com.apple.developer.proximity-reader.payment.acceptance": true,
+      // }
     },
     android: {
       icon: "./assets/app-icon.png",
@@ -45,6 +49,12 @@ export default {
         projectId: "dfc97c77-31b1-4267-896f-9472c87f166c",
       },
     },
+    updates: {
+      url: "https://u.expo.dev/dfc97c77-31b1-4267-896f-9472c87f166c",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
+    },
     plugins: [
       [
         "expo-image-picker",
@@ -53,73 +63,38 @@ export default {
           photosPermission: "Allow HCB to access your photos for receipts",
         },
       ],
-      [
-        "expo-font",
-        {
-          fonts: [
-            "./assets/fonts/JetBrainsMono-Regular.ttf",
-            "./assets/fonts/JetBrainsMono-Bold.ttf",
-          ],
-        },
-      ],
       "expo-secure-store",
       [
         "expo-local-authentication",
         { faceIDPermission: "Allow $(PRODUCT_NAME) to use Face ID." },
       ],
       [
-        "expo-alternate-app-icons",
-        [
-          {
-            name: "Default",
-            ios: "./assets/app-icon.png",
-            android: {
-              foregroundImage: "./assets/app-icon-foreground.png",
-              backgroundColor: "#EC3750",
-            },
-          },
-          {
-            name: "Artskillz",
-            ios: "./assets/icons/art-skillz.png",
-            android: {
-              foregroundImage: "./assets/icons/art-skillz-foreground.png",
-              backgroundColor: "#FF2500",
-            },
-          },
-          {
-            name: "Dev",
-            ios: "./assets/icons/dev.png",
-            android: {
-              foregroundImage: "./assets/icons/dev-foreground.png",
-              backgroundColor: "#33D6A6",
-            },
-          },
-          {
-            name: "Cashmoney",
-            ios: "./assets/icons/cash-money.png",
-            android: {
-              foregroundImage: "./assets/icons/cash-money-foreground.png",
-              backgroundColor: "#fff",
-            },
-          },
-          {
-            name: "Hacknight",
-            ios: "./assets/icons/hack-night.png",
-            android: {
-              foregroundImage: "./assets/icons/hack-night.png",
-              backgroundColor: "#FFD700",
-            },
-          },
-          {
-            name: "Testflight",
-            ios: "./assets/icons/testflight.png",
-            android: {
-              foregroundImage: "./assets/icons/testflight.png",
-              backgroundColor: "#FFD700",
-            },
-          },
-        ],
+        "@stripe/stripe-terminal-react-native",
+        {
+          bluetoothBackgroundMode: true,
+          locationWhenInUsePermission:
+            "Location access is required in order to accept payments.",
+          bluetoothPeripheralPermission:
+            "Bluetooth access is required in order to connect to supported bluetooth card readers.",
+          bluetoothAlwaysUsagePermission:
+            "This app uses Bluetooth to connect to supported card readers.",
+        },
       ],
+      [
+        "expo-build-properties",
+        {
+          android: {
+            minSdkVersion: 26,
+            packagingOptions: {
+              pickFirst: [
+                "org/bouncycastle/pqc/crypto/picnic/lowmcL*",
+                "org/bouncycastle/x509/CertPathReviewerMessages*",
+              ],
+            },
+          },
+        },
+      ],
+      ["expo-alternate-app-icons", appIcons],
     ],
   },
 };

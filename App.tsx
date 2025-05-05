@@ -2,11 +2,13 @@ import "expo-dev-client";
 
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import { LinkingOptions, NavigationContainer } from "@react-navigation/native";
+import { useStripeTerminal } from "@stripe/stripe-terminal-react-native";
 import { useFonts } from "expo-font";
 import * as Linking from "expo-linking";
 import * as SecureStorage from "expo-secure-store";
 import { useState, useEffect, useCallback } from "react";
 import { StatusBar, useColorScheme } from "react-native";
+import { AlertNotificationRoot } from "react-native-alert-notification";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SWRConfig } from "swr";
 
@@ -24,6 +26,8 @@ const linking: LinkingOptions<TabParamList> = {
     Linking.createURL("/"),
     "https://bank.hackclub.com",
     "https://hcb.hackclub.com",
+    "http://bank.hackclub.com",
+    "http://hcb.hackclub.com",
   ],
   config: {
     screens: {
@@ -37,6 +41,7 @@ const linking: LinkingOptions<TabParamList> = {
               transactionId: (id) => `txn_${id}`,
             },
           },
+          OrganizationLoader: ":orgId",
         },
       },
       Cards: {
@@ -45,6 +50,7 @@ const linking: LinkingOptions<TabParamList> = {
           CardList: "my/cards",
         },
       },
+      Receipts: "my/inbox",
     },
   },
   getStateFromPath,
@@ -52,20 +58,23 @@ const linking: LinkingOptions<TabParamList> = {
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'JetBrainsMono-Regular': require('./assets/fonts/JetBrainsMono-Regular.ttf'),
-    'JetBrainsMono-Bold': require('./assets/fonts/JetBrainsMono-Bold.ttf'),
-    'Consolas-Bold': require('./assets/fonts/CONSOLAB.ttf'),
+    "JetBrainsMono-Regular": require("./assets/fonts/JetBrainsMono-Regular.ttf"),
+    "JetBrainsMono-Bold": require("./assets/fonts/JetBrainsMono-Bold.ttf"),
+    "Consolas-Bold": require("./assets/fonts/CONSOLAB.ttf"),
+    Damion: require("./assets/fonts/Damion-Regular.ttf"),
   });
 
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
   const hcb = useClient(token);
   const scheme = useColorScheme();
+  useStripeTerminal();
 
   const fetcher = useCallback(
-    async (url: string) => {
+    async (url: string, options: RequestInit) => {
       try {
-        return await hcb(url).json();
+        // Allows us to use the v3 API in the v4 SWR
+        return await hcb(url, options).json();
       } catch (error) {
         if (
           error.name === "HTTPError" &&
@@ -111,17 +120,20 @@ export default function App() {
 
       <SWRConfig
         value={{
-          provider: asyncStorageProvider, fetcher
+          provider: asyncStorageProvider,
+          fetcher,
         }}
       >
         <SafeAreaProvider>
           <ActionSheetProvider>
-            <NavigationContainer
-              theme={scheme == "dark" ? theme : lightTheme}
-              linking={linking}
-            >
-              <Navigator />
-            </NavigationContainer>
+            <AlertNotificationRoot>
+              <NavigationContainer
+                theme={scheme == "dark" ? theme : lightTheme}
+                linking={linking}
+              >
+                <Navigator />
+              </NavigationContainer>
+            </AlertNotificationRoot>
           </ActionSheetProvider>
         </SafeAreaProvider>
       </SWRConfig>

@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { useTheme } from "@react-navigation/native";
-import { setAlternateAppIcon } from "expo-alternate-app-icons";
+import { setAlternateAppIcon, getAppIconName } from "expo-alternate-app-icons";
 import { revokeAsync } from "expo-auth-session";
 import Constants from "expo-constants";
-import { PropsWithChildren, useContext, useState } from "react";
+import { PropsWithChildren, useContext, useEffect, useState } from "react";
 import {
   Text,
   View,
@@ -41,7 +41,7 @@ const IconComponent = ({
   const { colors } = useTheme();
   const scheme = useColorScheme();
 
-  const icons = {
+  const icons: { [key: string]: NodeRequire | null } = {
     default: require("../../assets/icons/default.png"),
     artskillz: require("../../assets/icons/art-skillz.png"),
     cashmoney: require("../../assets/icons/cash-money.png"),
@@ -65,7 +65,7 @@ const IconComponent = ({
         }}
       >
         <Image
-          source={icons[name]}
+          source={icons[name] || require("../../assets/icons/default.png")}
           style={{
             width: 50,
             height: 50,
@@ -166,29 +166,15 @@ export default function SettingsPage(
   const { token, setToken } = useContext(AuthContext);
   const [appIcon, setIcon] = useState<string>("");
 
-  // useEffect(() => {
-  //   // AppIcon.getIconName(({ iconName }) => {
-  //   //   if (iconName == "default") iconName = "Default"; // don't hate me 'cause you ain't me
-  //   //   setAppIcon(iconName);
-  //   // });
-  //   // getAppIcon().then((iconName) => {
-  //   //   if (iconName == "default") iconName = "Default"; // don't hate me 'cause you ain't me
-  //   //   setAppIcon(iconName);
-  //   //   setIcon(iconName);
-  //   // });
-  //   let iconName = getAppIconName();
-  //   console.log(iconName);
-  //   console.log(supportsAlternateIcons);
-  //   if (iconName == "default") iconName = "Default"; // don't hate me 'cause you ain't me
-  //   setAlternateAppIcon("Dev");
-
-  // }, []);
+  useEffect(() => {
+    let iconName = getAppIconName() || "default";
+    iconName = iconName.toLowerCase();
+    setIcon(iconName);
+  }, []);
 
   const { data: user } = useSWR<User>("user");
 
   const handleClick = (iconName: string) => {
-    // AppIcon.setAppIcon(iconName.toString());
-    // setAppIcon(iconName);
     const formattedIconName =
       iconName.charAt(0).toUpperCase() + iconName.slice(1);
     setAlternateAppIcon(formattedIconName.toString());
@@ -202,55 +188,53 @@ export default function SettingsPage(
     >
       <View style={{ padding: 20, flex: 1, justifyContent: "center" }}>
         <SectionHeader title="App Icon" />
-        <View>
-          <ListSection>
-            <IconComponent
-              onPress={handleClick}
-              currentIcon={appIcon}
-              name="default"
-              displayName="Classic"
-            />
-            <IconComponent
-              onPress={handleClick}
-              currentIcon={appIcon}
-              name="cashmoney"
-              displayName="Cash Money"
-              last
-            />
-            <IconComponent
-              onPress={handleClick}
-              currentIcon={appIcon}
-              name="dev"
-              displayName="Dev"
-            />
-          </ListSection>
-          <ListHeader title="Shiny- catchem all!" />
-          <ListSection>
-            {Constants.platform?.ios && (
-              <>
-                <IconComponent
-                  onPress={handleClick}
-                  currentIcon={appIcon}
-                  name="hacknight"
-                  displayName="Open Late"
-                />
-                <IconComponent
-                  onPress={handleClick}
-                  currentIcon={appIcon}
-                  name="testflight"
-                  displayName="Early Adopter"
-                  last
-                />
-              </>
-            )}
-            <IconComponent
-              onPress={handleClick}
-              currentIcon={appIcon}
-              name="artskillz"
-              displayName="Graphic Design Is My Passion"
-            />
-          </ListSection>
-        </View>
+        <ListSection>
+          <IconComponent
+            onPress={handleClick}
+            currentIcon={appIcon}
+            name="default"
+            displayName="Classic"
+          />
+          <IconComponent
+            onPress={handleClick}
+            currentIcon={appIcon}
+            name="cashmoney"
+            displayName="Cash Money"
+          />
+          <IconComponent
+            onPress={handleClick}
+            currentIcon={appIcon}
+            name="dev"
+            displayName="Dev"
+            last
+          />
+        </ListSection>
+        <ListHeader title="Shiny- catchem all!" />
+        <ListSection>
+          {Constants.platform?.ios && (
+            <>
+              <IconComponent
+                onPress={handleClick}
+                currentIcon={appIcon}
+                name="hacknight"
+                displayName="Open Late"
+              />
+              <IconComponent
+                onPress={handleClick}
+                currentIcon={appIcon}
+                name="testflight"
+                displayName="Early Adopter"
+              />
+            </>
+          )}
+          <IconComponent
+            onPress={handleClick}
+            currentIcon={appIcon}
+            name="artskillz"
+            displayName="Graphic Design Is My Passion"
+            last
+          />
+        </ListSection>
         <View style={{ paddingTop: 12 }}>
           <SectionHeader title="Connected Account" />
           <View

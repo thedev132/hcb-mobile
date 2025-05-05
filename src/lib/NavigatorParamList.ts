@@ -10,14 +10,24 @@ export type StackParamList = {
   Organizations: undefined;
   Invitation: { inviteId: Invitation["id"]; invitation?: Invitation };
   Event: { orgId: Organization["id"]; organization?: Organization };
+  OrganizationLoader: { orgId: Organization["id"] };
   AccountNumber: { orgId: Organization["id"] };
+  ProcessDonation: {
+    orgId: Organization["id"];
+    payment: { amount: number };
+    collectPayment: () => Promise<boolean>;
+    name: string;
+    email: string;
+  };
   OrganizationSettings: { orgId: Organization["id"] };
+  OrganizationDonation: { orgId: Organization["id"] };
   Transaction: {
     transactionId: Transaction["id"];
     orgId?: Organization["id"];
     transaction?: Transaction;
   };
   RenameTransaction: { orgId: string; transaction: Transaction };
+  Transfer: { organization: Organization };
 };
 
 export type CardsStackParamList = {
