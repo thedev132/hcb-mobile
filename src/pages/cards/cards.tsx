@@ -7,7 +7,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
 import { generate } from "hcb-geo-pattern";
 import { memo, useCallback, useEffect, useState } from "react";
-import { Pressable, Text, useColorScheme, View } from "react-native";
+import { Platform, Pressable, Text, useColorScheme, View } from "react-native";
 import ReorderableList, {
   useReorderableDrag,
 } from "react-native-reorderable-list";
@@ -140,13 +140,20 @@ export default function CardsPage({ navigation }: Props) {
         <MenuView
           actions={[
             {
+              id: "createCard",
+              title: "Create Card",
+              image: Platform.OS === "ios" ? "plus" : undefined,
+            },
+            {
               id: "showCanceledCards",
               title: "Show canceled cards",
               state: canceledCardsShown ? "on" : "off",
             },
           ]}
           onPressAction={({ nativeEvent: { event } }) => {
-            if (event == "showCanceledCards") {
+            if (event == "createCard") {
+              navigation.navigate("OrderCard");
+            } else if (event == "showCanceledCards") {
               setCanceledCardsShown(!canceledCardsShown);
               AsyncStorage.setItem(
                 "canceledCardsShown",
@@ -294,15 +301,77 @@ export default function CardsPage({ navigation }: Props) {
   };
 
   if (sortedCards) {
+    const filteredCards = canceledCardsShown
+      ? sortedCards
+      : sortedCards.filter(
+          (c) => c.status != "canceled" && c.status != "expired",
+        );
+
+    if (filteredCards.length === 0) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 40,
+            paddingBottom: tabBarHeight,
+          }}
+        >
+          <Ionicons name="card-outline" size={80} color={palette.muted} />
+          <Text
+            style={{
+              color: palette.primary,
+              fontSize: 24,
+              fontWeight: "600",
+              marginTop: 20,
+              textAlign: "center",
+            }}
+          >
+            No Cards Yet
+          </Text>
+          <Text
+            style={{
+              color: palette.muted,
+              fontSize: 16,
+              marginTop: 8,
+              textAlign: "center",
+              lineHeight: 24,
+            }}
+          >
+            Get started by creating your first card. You can create virtual cards instantly or order physical cards.
+          </Text>
+          <Pressable
+            onPress={() => navigation.navigate("OrderCard")}
+            style={{
+              backgroundColor: palette.primary,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 12,
+              marginTop: 32,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <Ionicons name="add" size={20} color="white" />
+            <Text
+              style={{
+                color: "white",
+                fontSize: 16,
+                fontWeight: "600",
+                marginLeft: 8,
+              }}
+            >
+              Create Your First Card
+            </Text>
+          </Pressable>
+        </View>
+      );
+    }
+
     return (
       <ReorderableList
-        data={
-          canceledCardsShown
-            ? sortedCards
-            : sortedCards.filter(
-                (c) => c.status != "canceled" && c.status != "expired",
-              )
-        }
+        data={filteredCards}
         keyExtractor={(item) => item.id}
         onReorder={({ from, to }) => {
           Haptics.selectionAsync();
@@ -330,7 +399,7 @@ export default function CardsPage({ navigation }: Props) {
           />
         )}
         ListFooterComponent={() =>
-          sortedCards.length > 2 && (
+          filteredCards.length > 2 && (
             <Text
               style={{
                 color: palette.muted,

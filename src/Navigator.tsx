@@ -23,6 +23,7 @@ import { navRef } from "./navigationRef";
 import CardPage from "./pages/card";
 import CardsPage from "./pages/cards";
 import GrantCardPage from "./pages/GrantCard";
+import OrderCardPage from "./pages/cards/OrderCard";
 import Home from "./pages/index";
 import InvitationPage from "./pages/Invitation";
 import OrganizationPage from "./pages/organization";
@@ -270,6 +271,11 @@ export default function Navigator() {
               name="GrantCard"
               component={GrantCardPage}
               options={() => ({ title: "Card" })}
+            />
+            <CardsStack.Screen
+              name="OrderCard"
+              component={OrderCardPage}
+              options={() => ({ title: "Create Card" })}
             />
             <Stack.Screen
               options={{ headerBackTitle: "Back" }}
