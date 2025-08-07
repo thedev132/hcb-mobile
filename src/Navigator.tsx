@@ -27,6 +27,7 @@ import Home from "./pages/index";
 import InvitationPage from "./pages/Invitation";
 import OrganizationPage from "./pages/organization";
 import AccountNumberPage from "./pages/organization/AccountNumber";
+import OrganizationCardsPage from "./pages/organization/Cards";
 import OrganizationDonationPage from "./pages/organization/Donation";
 import ProcessDonationPage from "./pages/organization/ProcessDonation";
 import OrganizationTeamPage from "./pages/organization/Team";
@@ -199,6 +200,14 @@ export default function Navigator() {
               options={{
                 headerBackTitle: "Back",
                 title: "Manage Organization",
+              }}
+            />
+            <Stack.Screen
+              name="OrganizationCards"
+              component={OrganizationCardsPage}
+              options={{
+                headerBackTitle: "Back",
+                title: "Cards",
               }}
             />
             <Stack.Screen
