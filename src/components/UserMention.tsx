@@ -14,11 +14,12 @@ export default function UserMention({ user }: { user: User }) {
       style={{
         flexDirection: "row",
         alignItems: "center",
-        gap: user.admin ? 5 : 10,
+        gap: user.admin || user.auditor ? 5 : 10,
       }}
     >
       <UserAvatar user={user} />
       {user.admin && <Ionicons name="flash" color="#f1c40f" size={15} />}
+      {user.auditor && !user.admin && <Ionicons name="eye" color="#3498db" size={15} />}
       <Text style={{ color: themeColors.text }}>{user.name}</Text>
     </View>
   );

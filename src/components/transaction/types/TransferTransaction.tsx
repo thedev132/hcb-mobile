@@ -8,6 +8,7 @@ import User from "../../../lib/types/User";
 import { renderMoney, statusColor } from "../../../util";
 import Badge from "../../Badge";
 import UserMention from "../../UserMention";
+import { hasAdminReadAccess } from "../../AdminTools";
 import TransactionDetails, { descriptionDetail } from "../TransactionDetails";
 import TransactionTitle, { Muted } from "../TransactionTitle";
 
@@ -22,9 +23,9 @@ export default function TransferTransaction({
   const { data: user } = useSWR<User>("user");
 
   const userInFromOrg =
-    user?.admin || userOrgs?.some((org) => org.id == transfer.from.id);
+    hasAdminReadAccess(user) || userOrgs?.some((org) => org.id == transfer.from.id);
   const userInToOrg =
-    user?.admin || userOrgs?.some((org) => org.id == transfer.to.id);
+    hasAdminReadAccess(user) || userOrgs?.some((org) => org.id == transfer.to.id);
 
   const handleGrantCardNavigation = () => {
     if (transfer.card_grant_id) {

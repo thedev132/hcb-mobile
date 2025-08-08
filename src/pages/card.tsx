@@ -29,6 +29,7 @@ import Divider from "../components/Divider";
 import PaymentCard from "../components/PaymentCard";
 import Transaction from "../components/Transaction";
 import UserAvatar from "../components/UserAvatar";
+import { hasAdminReadAccess } from "../components/AdminTools";
 import { showAlert } from "../lib/alertUtils";
 import useClient from "../lib/client";
 import { logError, logCriticalError } from "../lib/errorUtils";
@@ -95,7 +96,7 @@ export default function CardPage(
   const isManagerOrAdmin =
     organization?.users.some(
       (orgUser) => orgUser.id === user?.id && orgUser.role === "manager",
-    ) || user?.admin;
+    ) || hasAdminReadAccess(user);
   const [refreshing, setRefreshing] = useState(false);
   const [cardError, setCardError] = useState<string | null>(null);
   const [transactionError, setTransactionError] = useState<string | null>(null);

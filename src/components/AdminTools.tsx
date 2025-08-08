@@ -13,12 +13,17 @@ export const AdminToolsStyle: ViewStyle = {
   padding: 8,
 };
 
+// Helper function to check if user has admin-like read access
+export function hasAdminReadAccess(user?: User): boolean {
+  return user?.admin === true || user?.auditor === true;
+}
+
 export default function AdminTools(
   props: PropsWithChildren<{ style?: ViewStyle; onPress?: () => void }>,
 ) {
   const { data: user } = useSWR<User>("user");
 
-  if (!user?.admin) return null;
+  if (!hasAdminReadAccess(user)) return null;
 
   return (
     <Pressable onPress={props.onPress}>
