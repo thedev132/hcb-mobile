@@ -24,3 +24,16 @@ export function userColor(id: User["id"]) {
   ];
   return colors[id.charCodeAt(4) % colors.length];
 }
+
+// Permission helper functions for role-based access control
+export function isAdmin(user: User | null | undefined): boolean {
+  return Boolean(user?.admin);
+}
+
+export function isAuditor(user: User | null | undefined): boolean {
+  return Boolean(user?.auditor);
+}
+
+export function hasReadAccess(user: User | null | undefined): boolean {
+  return isAdmin(user) || isAuditor(user);
+}
