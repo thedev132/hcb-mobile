@@ -36,6 +36,7 @@ import GrantCard from "../../lib/types/GrantCard";
 import { OrganizationExpanded } from "../../lib/types/Organization";
 import ITransaction from "../../lib/types/Transaction";
 import User from "../../lib/types/User";
+import { isAdmin } from "../../lib/userUtils";
 import useStripeCardDetails from "../../lib/useStripeCardDetails";
 import { palette } from "../../utils/theme";
 import {
@@ -91,7 +92,7 @@ export default function CardPage(
   const isManagerOrAdmin =
     organization?.users.some(
       (orgUser) => orgUser.id === user?.id && orgUser.role === "manager",
-    ) || user?.admin;
+    ) || isAdmin(user);
   const [refreshing, setRefreshing] = useState(false);
   const [cardError, setCardError] = useState<string | null>(null);
   const [transactionError, setTransactionError] = useState<string | null>(null);
