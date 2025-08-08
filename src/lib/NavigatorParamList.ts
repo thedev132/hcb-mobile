@@ -67,3 +67,10 @@ export type SettingsStackParamList = {
   Tutorials: undefined;
   About: undefined;
 };
+
+export type OrganizationTabParamList = {
+  Transactions: { orgId: Organization["id"]; organization?: Organization };
+  Receive: { orgId: Organization["id"]; organization?: Organization };
+  Spend: { orgId: Organization["id"]; organization?: Organization };
+  More: { orgId: Organization["id"]; organization?: Organization };
+};
