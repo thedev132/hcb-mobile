@@ -1,0 +1,24 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TransactionType = void 0;
+var TransactionType;
+(function (TransactionType) {
+    TransactionType["Unknown"] = "000";
+    TransactionType["Invoice"] = "100";
+    TransactionType["Donation"] = "200";
+    TransactionType["PartnerDonation"] = "201";
+    TransactionType["AchTransfer"] = "300";
+    TransactionType["Wire"] = "310";
+    TransactionType["Paypal"] = "350";
+    TransactionType["Check"] = "400";
+    TransactionType["IncreaseCheck"] = "401";
+    TransactionType["CheckDeposit"] = "402";
+    TransactionType["Disbursement"] = "500";
+    TransactionType["StripeCard"] = "600";
+    TransactionType["StripeForceCapture"] = "601";
+    TransactionType["BankFee"] = "700";
+    TransactionType["IncomingBankFee"] = "701";
+    TransactionType["FeeRevenue"] = "702";
+    TransactionType["ExpensePayout"] = "710";
+    TransactionType["AchPayment"] = "800";
+})(TransactionType || (exports.TransactionType = TransactionType = {}));
